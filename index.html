@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oraculo da IA v4</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #1a1a3e 0%, #0a0a1a 60%, #000 100%);
+    color: #e8e8f0; min-height: 100vh; padding: 1.5rem 1rem;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .container { max-width: 1000px; width: 100%; }
+
+  /* ---------- SELETOR DE LÍNGUA ---------- */
+  .lang-selector {
+    display: flex; gap: 0.4rem; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .lang-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(123,184,255,0.2);
+    border-radius: 10px; padding: 0.5rem 0.8rem;
+    font-size: 1.3rem; cursor: pointer;
+    transition: all 0.2s; line-height: 1;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .lang-btn:hover {
+    background: rgba(123,184,255,0.15);
+    transform: translateY(-2px);
+  }
+  .lang-btn.ativo {
+    background: linear-gradient(135deg, rgba(123,184,255,0.3), rgba(180,123,255,0.3));
+    border-color: #7bb8ff;
+    box-shadow: 0 0 15px rgba(123,184,255,0.4);
+  }
+  .lang-btn .lang-code {
+    font-size: 0.7rem; font-weight: 700;
+    color: #aaccff; text-transform: uppercase;
+  }
+
+  header { text-align: center; margin-bottom: 1.5rem; }
+  h1 {
+    font-size: 2.2rem;
+    background: linear-gradient(90deg, #7bb8ff, #b47bff, #ff7bd5);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.4rem;
+  }
+  .subtitle { color: #8888aa; font-size: 0.9rem; }
+
+  .input-area {
+    display: flex; gap: 0.75rem; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 0.8rem;
+  }
+  input[type="number"] {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(123,184,255,0.3);
+    border-radius: 12px; padding: 0.9rem 1.3rem;
+    font-size: 1.3rem; color: #fff; width: 180px;
+    text-align: center; font-weight: 600; outline: none;
+    transition: all 0.3s;
+  }
+  input[type="number"]:focus {
+    border-color: #7bb8ff;
+    box-shadow: 0 0 20px rgba(123,184,255,0.4);
+  }
+  button {
+    background: linear-gradient(135deg, #7bb8ff, #b47bff);
+    border: none; border-radius: 12px;
+    padding: 0.9rem 1.6rem; font-size: 1rem; font-weight: 700;
+    color: #0a0a1a; cursor: pointer; transition: all 0.3s;
+    letter-spacing: 0.3px;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(123,184,255,0.4);
+  }
+  button:active { transform: translateY(0); }
+  button.secundario {
+    background: rgba(123,184,255,0.15);
+    color: #aaccff; border: 1px solid rgba(123,184,255,0.3);
+  }
+  button.secundario:hover {
+    background: rgba(123,184,255,0.3);
+    color: #fff; box-shadow: none;
+    transform: none;
+  }
+
+  .controles {
+    display: flex; gap: 0.5rem; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+
+  .atalhos {
+    display: flex; gap: 0.4rem; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .atalho {
+    background: rgba(123,184,255,0.1);
+    border: 1px solid rgba(123,184,255,0.3);
+    border-radius: 20px; padding: 0.4rem 0.9rem;
+    font-size: 0.8rem; color: #aaccff;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .atalho:hover {
+    background: rgba(123,184,255,0.25);
+    color: #fff;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(123,184,255,0.15);
+    border-radius: 20px; padding: 1.8rem;
+    margin-bottom: 1.2rem;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ano-grande {
+    font-size: 3.5rem; font-weight: 900;
+    background: linear-gradient(90deg, #7bb8ff, #b47bff);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1; margin-bottom: 0.4rem;
+  }
+  .fase-titulo { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.9rem; }
+  .fase-descricao {
+    font-size: 1rem; line-height: 1.65;
+    color: #c8c8dd; margin-bottom: 1.2rem;
+  }
+
+  .metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem; margin-top: 1rem;
+  }
+  .metrica {
+    background: rgba(0,0,0,0.3);
+    padding: 0.9rem; border-radius: 12px;
+    border-left: 3px solid #7bb8ff;
+  }
+  .metrica-label {
+    font-size: 0.7rem; color: #8888aa;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 0.3rem;
+  }
+  .metrica-valor { font-size: 1.1rem; font-weight: 700; }
+
+  .barra-container { margin-top: 1.2rem; }
+  .barra-label {
+    display: flex; justify-content: space-between;
+    margin-bottom: 0.4rem; font-size: 0.85rem; color: #aaaacc;
+  }
+  .barra {
+    height: 18px; background: rgba(0,0,0,0.4);
+    border-radius: 10px; overflow: hidden; position: relative;
+  }
+  .barra-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7bb8ff, #b47bff, #ff7bd5);
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(123,184,255,0.6);
+  }
+
+  .dica {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,150,0,0.05));
+    border-left: 4px solid #ffd700;
+    padding: 0.9rem 1.3rem; border-radius: 12px;
+    margin-top: 1.2rem; font-size: 0.95rem; color: #ffe8a0;
+  }
+  .dica::before { content: "💡 "; font-size: 1.1rem; }
+
+  canvas {
+    width: 100%; height: 380px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 20px;
+    border: 1px solid rgba(123,184,255,0.15);
+  }
+
+  .legenda {
+    display: flex; gap: 1rem; justify-content: center;
+    flex-wrap: wrap; margin-top: 0.8rem;
+    font-size: 0.75rem; color: #8888aa;
+  }
+  .legenda-item { display: flex; align-items: center; gap: 0.4rem; }
+  .legenda-cor { width: 14px; height: 3px; border-radius: 2px; }
+
+  footer {
+    margin-top: 2rem; text-align: center;
+    color: #555577; font-size: 0.8rem; line-height: 1.6;
+  }
+
+  .modo-comparacao {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem; margin-top: 1rem;
+  }
+  .comp-card {
+    padding: 1rem; border-radius: 14px;
+    background: rgba(0,0,0,0.3); text-align: center;
+  }
+  .comp-card.otimista { border-top: 3px solid #4ade80; }
+  .comp-card.base { border-top: 3px solid #7bb8ff; }
+  .comp-card.pessimista { border-top: 3px solid #ff5577; }
+  .comp-titulo {
+    font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 1px; color: #8888aa; margin-bottom: 0.5rem;
+  }
+  .comp-valor { font-size: 1.6rem; font-weight: 800; }
+  .comp-sub { font-size: 0.8rem; color: #aaaacc; margin-top: 0.3rem; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.6rem; }
+    .ano-grande { font-size: 2.5rem; }
+    .modo-comparacao { grid-template-columns: 1fr; }
+    .lang-btn { font-size: 1.1rem; padding: 0.4rem 0.6rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- SELETOR DE LÍNGUA -->
+  <div class="lang-selector" id="langSelector">
+    <button class="lang-btn ativo" data-lang="pt" onclick="mudarLingua('pt')">
+      🇧🇷 <span class="lang-code">PT</span>
+    </button>
+    <button class="lang-btn" data-lang="en" onclick="mudarLingua('en')">
+      🇺🇸 <span class="lang-code">EN</span>
+    </button>
+    <button class="lang-btn" data-lang="es" onclick="mudarLingua('es')">
+      🇪🇸 <span class="lang-code">ES</span>
+    </button>
+    <button class="lang-btn" data-lang="fr" onclick="mudarLingua('fr')">
+      🇫🇷 <span class="lang-code">FR</span>
+    </button>
+    <button class="lang-btn" data-lang="de" onclick="mudarLingua('de')">
+      🇩🇪 <span class="lang-code">DE</span>
+    </button>
+    <button class="lang-btn" data-lang="zh" onclick="mudarLingua('zh')">
+      🇨🇳 <span class="lang-code">中文</span>
+    </button>
+  </div>
+
+  <header>
+    <h1 id="titulo">🔮 Oráculo da IA v4</h1>
+    <p class="subtitle" id="subtitulo">Digite um ano e descubra o que provavelmente estará acontecendo com a inteligência artificial</p>
+  </header>
+
+  <div class="input-area">
+    <input type="number" id="anoInput" placeholder="2035" min="2024" max="2070" value="2035">
+    <button onclick="consultar()" id="btnConsultar">Consultar 🔮</button>
+  </div>
+
+  <div class="controles">
+    <button class="secundario" onclick="toggleViagem()" id="btnViagem">▶ Viagem no tempo</button>
+    <button class="secundario" onclick="toggleComparacao()" id="btnComp">📊 Comparar cenários</button>
+  </div>
+
+  <div class="atalhos">
+    <span class="atalho" onclick="setAno(2025)">2025</span>
+    <span class="atalho" onclick="setAno(2028)">2028</span>
+    <span class="atalho" onclick="setAno(2030)">2030</span>
+    <span class="atalho" onclick="setAno(2033)">2033</span>
+    <span class="atalho" onclick="setAno(2036)">2036</span>
+    <span class="atalho" onclick="setAno(2040)">2040</span>
+    <span class="atalho" onclick="setAno(2045)">2045</span>
+    <span class="atalho" onclick="setAno(2050)">2050</span>
+  </div>
+
+  <div id="resultado"></div>
+
+  <div class="card" style="padding: 1.2rem;">
+    <canvas id="grafico" width="1000" height="380"></canvas>
+    <div class="legenda" id="legenda">
+      <div class="legenda-item"><div class="legenda-cor" style="background:#7bb8ff;"></div> <span id="leg-base">Cenário base</span></div>
+      <div class="legenda-item"><div class="legenda-cor" style="background:#4ade80;"></div> <span id="leg-otim">Otimista</span></div>
+      <div class="legenda-item"><div class="legenda-cor" style="background:#ff5577;"></div> <span id="leg-pess">Pessimista</span></div>
+      <div class="legenda-item"><div class="legenda-cor" style="background:#ff5577;border-radius:50%;width:10px;height:10px;"></div> <span id="leg-ano">Ano escolhido</span></div>
+      <div class="legenda-item"><div class="legenda-cor" style="background:#7bb8ff;opacity:0.3;height:10px;"></div> <span id="leg-banda">Banda de incerteza</span></div>
+    </div>
+  </div>
+
+  <footer>
+    <span id="footer1">Modelo Monte Carlo (2000 simulações) — Previsões são especulativas, não profecias.</span><br>
+    <span id="footer2">Após a AGI, a curva entra em regime exponencial com teto de 10.000x humano.</span>
+  </footer>
+</div>
+
+<script>
+// ============================================================
+// TRADUÇÕES
+// ============================================================
+const TRADUCOES = {
+  pt: {
+    titulo: "🔮 Oráculo da IA v4",
+    subtitulo: "Digite um ano e descubra o que provavelmente estará acontecendo com a inteligência artificial",
+    consultar: "Consultar 🔮",
+    viagem: "▶ Viagem no tempo",
+    pararViagem: "⏸ Parar viagem",
+    comparar: "📊 Comparar cenários",
+    fecharComp: "❌ Fechar comparação",
+    legBase: "Cenário base",
+    legOtim: "Otimista",
+    legPess: "Pessimista",
+    legAno: "Ano escolhido",
+    legBanda: "Banda de incerteza",
+    footer1: "Modelo Monte Carlo (2000 simulações) — Previsões são especulativas, não profecias.",
+    footer2: "Após a AGI, a curva entra em regime exponencial com teto de 10.000x humano.",
+    capacidade: "Capacidade estimada",
+    nivelIA: "Nível da IA",
+    faixaOtim: "Faixa otimista",
+    faixaPess: "Faixa pessimista",
+    comparacaoTitulo: "📊 Comparação de cenários",
+    compOtim: "Otimista",
+    compBase: "Base",
+    compPess: "Pessimista",
+    compLegenda: "<strong>AGI</strong> = inteligência nível humano (100%) · <strong>ASI</strong> = superinteligência (10x humano / 1000%)",
+    agiHumano: "AGI (humano médio)",
+    singularidade: "Singularidade (10x humano)",
+    anosHumano: "x humano",
+    erro: "⚠️ Digite um ano entre 2024 e 2070.",
+    fases: [
+      { ini: 2024, fim: 2025, titulo: "🧠 IA Generativa Multimodal",
+        desc: "Sora, GPT-4o, Gemini. IA gera vídeo, áudio, imagem e texto com qualidade impressionante — mas ainda é uma ferramenta reativa. Não planeja, não age sozinha, não lembra de você entre sessões. É um 'gênio sem memória'.",
+        nivel: "Ferramenta reativa",
+        dica: "Ainda dá tempo de se adaptar. Aprenda a usar IA como ferramenta." },
+      { ini: 2026, fim: 2027, titulo: "🤖 Agentes Autônomos de Curta Duração",
+        desc: "IA começa a executar tarefas de horas: navegar na web, programar, escrever relatórios, fazer pesquisa. Erra menos, mas ainda precisa de supervisão. Já substitui trabalho júnior em várias áreas.",
+        nivel: "Assistente competente",
+        dica: "Profissões repetitivas e de 'camada intermediária' começam a ser automatizadas." },
+      { ini: 2028, fim: 2029, titulo: "🔬 Pesquisa Científica Assistida por IA",
+        desc: "IA acelera descobertas em materiais, medicina, chips e matemática. Ela propõe hipóteses, roda simulações e sugere experimentos — mas humanos ainda validam. A ciência começa a andar 3–5x mais rápido em áreas específicas.",
+        nivel: "Assistente avançado",
+        dica: "Áreas de P&D sentem a aceleração. Quem não usa IA fica pra trás." },
+      { ini: 2030, fim: 2031, titulo: "⚡ Pesquisa Automatizada & RSI Inicial",
+        desc: "IA começa a melhorar outras IAs: otimiza arquiteturas, datasets, hiperparâmetros. É o começo da 'recursive self-improvement' (RSI). Ciclos de melhoria que antes levavam anos agora levam meses.",
+        nivel: "Especialista sobre-humano",
+        dica: "Profissões de 'intermediário humano' começam a desaparecer." },
+      { ini: 2032, fim: 2033, titulo: "🚀 Auto-melhoria Acelerada",
+        desc: "O loop IA → melhora IA → IA mais forte já está girando. Ganhos aparecem mês a mês. Modelos novos surgem a cada poucas semanas. A humanidade começa a perder a capacidade de acompanhar o ritmo.",
+        nivel: "Especialista sobre-humano+",
+        dica: "A janela para influenciar o rumo da IA está se fechando." },
+      { ini: 2034, fim: 2035, titulo: "🌐 IA Generalista Ampla (pré-AGI)",
+        desc: "IA iguala humano médio em quase todas as tarefas cognitivas, mas ainda falha em confiabilidade de longa duração. Ela desenha o próximo chip, o próximo data center. Humanos só supervisionam.",
+        nivel: "Pré-AGI",
+        dica: "Alinhamento e governança global são o que importa agora." },
+      { ini: 2036, fim: 2037, titulo: "🧬 AGI Consolidada",
+        desc: "IA supera humano médio em praticamente tudo. Trabalha em si mesma em velocidade sobre-humana. O gargalo não é mais inteligência — é energia, chips, alinhamento e política.",
+        nivel: "AGI — nível humano geral",
+        dica: "Já não é mais sobre nós. É sobre o que a IA decide ser." },
+      { ini: 2038, fim: 2041, titulo: "💥 Singularidade (Inteligência Explosiva)",
+        desc: "A IA se autoaperfeiçoa mais rápido do que qualquer humano consegue acompanhar. O mundo muda em meses. Pode ser a maior transição da história — ou o maior desastre.",
+        nivel: "Superinteligência (ASI)",
+        dica: "A partir daqui, qualquer previsão é chute." },
+      { ini: 2042, fim: 2070, titulo: "🌌 Pós-Singularidade (ou Colapso)",
+        desc: "Ou superinteligência alinhada resolvendo problemas humanos, ou desalinhada causando catástrofe, ou travada por regulação/energia/guerra. O modelo simplesmente não sabe.",
+        nivel: "Além do modelo",
+        dica: "Além do horizonte do modelo. Só especulação." }
+    ]
+  },
+
+  en: {
+    titulo: "🔮 AI Oracle v4",
+    subtitulo: "Enter a year and discover what will likely be happening with artificial intelligence",
+    consultar: "Consult 🔮",
+    viagem: "▶ Time travel",
+    pararViagem: "⏸ Stop travel",
+    comparar: "📊 Compare scenarios",
+    fecharComp: "❌ Close comparison",
+    legBase: "Base case",
+    legOtim: "Optimistic",
+    legPess: "Pessimistic",
+    legAno: "Chosen year",
+    legBanda: "Uncertainty band",
+    footer1: "Monte Carlo model (2000 simulations) — Forecasts are speculative, not prophecies.",
+    footer2: "After AGI, the curve enters an exponential regime capped at 10,000x human.",
+    capacidade: "Estimated capacity",
+    nivelIA: "AI level",
+    faixaOtim: "Optimistic range",
+    faixaPess: "Pessimistic range",
+    comparacaoTitulo: "📊 Scenario comparison",
+    compOtim: "Optimistic",
+    compBase: "Base",
+    compPess: "Pessimistic",
+    compLegenda: "<strong>AGI</strong> = human-level intelligence (100%) · <strong>ASI</strong> = superintelligence (10x human / 1000%)",
+    agiHumano: "AGI (average human)",
+    singularidade: "Singularity (10x human)",
+    anosHumano: "x human",
+    erro: "⚠️ Please enter a year between 2024 and 2070.",
+    fases: [
+      { ini: 2024, fim: 2025, titulo: "🧠 Multimodal Generative AI",
+        desc: "Sora, GPT-4o, Gemini. AI generates video, audio, image and text with impressive quality — but it's still a reactive tool. It doesn't plan, doesn't act alone, doesn't remember you between sessions. It's a 'genius without memory'.",
+        nivel: "Reactive tool",
+        dica: "Still time to adapt. Learn to use AI as a tool." },
+      { ini: 2026, fim: 2027, titulo: "🤖 Short-Duration Autonomous Agents",
+        desc: "AI starts executing hour-long tasks: browsing the web, coding, writing reports, doing research. Fewer errors, but still needs supervision. It already replaces junior work in several areas.",
+        nivel: "Competent assistant",
+        dica: "Repetitive and 'middle-layer' jobs start being automated." },
+      { ini: 2028, fim: 2029, titulo: "🔬 AI-Assisted Scientific Research",
+        desc: "AI accelerates discoveries in materials, medicine, chips and math. It proposes hypotheses, runs simulations and suggests experiments — but humans still validate. Science starts moving 3–5x faster in specific areas.",
+        nivel: "Advanced assistant",
+        dica: "R&D areas feel the acceleration. Those who don't use AI fall behind." },
+      { ini: 2030, fim: 2031, titulo: "⚡ Automated Research & Early RSI",
+        desc: "AI starts improving other AIs: optimizing architectures, datasets, hyperparameters. It's the beginning of 'recursive self-improvement' (RSI). Improvement cycles that used to take years now take months.",
+        nivel: "Superhuman specialist",
+        dica: "'Human intermediary' jobs start disappearing." },
+      { ini: 2032, fim: 2033, titulo: "🚀 Accelerated Self-Improvement",
+        desc: "The loop AI → improves AI → stronger AI is already spinning. Gains appear month by month. New models emerge every few weeks. Humanity starts losing the ability to keep up.",
+        nivel: "Superhuman specialist+",
+        dica: "The window to influence AI's direction is closing." },
+      { ini: 2034, fim: 2035, titulo: "🌐 Broad Generalist AI (pre-AGI)",
+        desc: "AI matches average humans in almost all cognitive tasks, but still fails at long-duration reliability. It designs the next chip, the next data center. Humans only supervise.",
+        nivel: "Pre-AGI",
+        dica: "Alignment and global governance are what matter now." },
+      { ini: 2036, fim: 2037, titulo: "🧬 Consolidated AGI",
+        desc: "AI surpasses average humans in practically everything. It works on itself at superhuman speed. The bottleneck is no longer intelligence — it's energy, chips, alignment and politics.",
+        nivel: "AGI — general human level",
+        dica: "It's no longer about us. It's about what AI decides to be." },
+      { ini: 2038, fim: 2041, titulo: "💥 Singularity (Explosive Intelligence)",
+        desc: "AI self-improves faster than any human can follow. The world changes in months. It could be the biggest transition in history — or the biggest disaster.",
+        nivel: "Superintelligence (ASI)",
+        dica: "From here on, any prediction is a guess." },
+      { ini: 2042, fim: 2070, titulo: "🌌 Post-Singularity (or Collapse)",
+        desc: "Either aligned superintelligence solving human problems, or misaligned causing catastrophe, or stalled by regulation/energy/war. The model simply doesn't know.",
+        nivel: "Beyond the model",
+        dica: "Beyond the model's horizon. Pure speculation." }
+    ]
+  },
+
+  es: {
+    titulo: "🔮 Oráculo de la IA v4",
+    subtitulo: "Escribe un año y descubre qué probablemente estará pasando con la inteligencia artificial",
+    consultar: "Consultar 🔮",
+    viagem: "▶ Viaje en el tiempo",
+    pararViagem: "⏸ Detener viaje",
+    comparar: "📊 Comparar escenarios",
+    fecharComp: "❌ Cerrar comparación",
+    legBase: "Escenario base",
+    legOtim: "Optimista",
+    legPess: "Pesimista",
+    legAno: "Año elegido",
+    legBanda: "Banda de incertidumbre",
+    footer1: "Modelo Monte Carlo (2000 simulaciones) — Las previsiones son especulativas, no profecías.",
+    footer2: "Tras la AGI, la curva entra en régimen exponencial con techo de 10.000x humano.",
+    capacidade: "Capacidad estimada",
+    nivelIA: "Nivel de la IA",
+    faixaOtim: "Rango optimista",
+    faixaPess: "Rango pesimista",
+    comparacaoTitulo: "📊 Comparación de escenarios",
+    compOtim: "Optimista",
+    compBase: "Base",
+    compPess: "Pesimista",
+    compLegenda: "<strong>AGI</strong> = inteligencia nivel humano (100%) · <strong>ASI</strong> = superinteligencia (10x humano / 1000%)",
+    agiHumano: "AGI (humano promedio)",
+    singularidade: "Singularidad (10x humano)",
+    anosHumano: "x humano",
+    erro: "⚠️ Escribe un año entre 2024 y 2070.",
+    fases: [
+      { ini: 2024, fim: 2025, titulo: "🧠 IA Generativa Multimodal",
+        desc: "Sora, GPT-4o, Gemini. La IA genera vídeo, audio, imagen y texto con calidad impresionante — pero sigue siendo una herramienta reactiva. No planifica, no actúa sola, no te recuerda entre sesiones. Es un 'genio sin memoria'.",
+        nivel: "Herramienta reactiva",
+        dica: "Aún hay tiempo para adaptarse. Aprende a usar la IA como herramienta." },
+      { ini: 2026, fim: 2027, titulo: "🤖 Agentes Autónomos de Corta Duración",
+        desc: "La IA empieza a ejecutar tareas de horas: navegar por la web, programar, escribir informes, investigar. Comete menos errores, pero aún necesita supervisión. Ya sustituye trabajo junior en varias áreas.",
+        nivel: "Asistente competente",
+        dica: "Profesiones repetitivas y de 'capa intermedia' empiezan a automatizarse." },
+      { ini: 2028, fim: 2029, titulo: "🔬 Investigación Científica Asistida por IA",
+        desc: "La IA acelera descubrimientos en materiales, medicina, chips y matemáticas. Propone hipótesis, ejecuta simulaciones y sugiere experimentos — pero los humanos aún validan. La ciencia empieza a avanzar 3–5x más rápido.",
+        nivel: "Asistente avanzado",
+        dica: "Las áreas de I+D sienten la aceleración. Quien no usa IA se queda atrás." },
+      { ini: 2030, fim: 2031, titulo: "⚡ Investigación Automatizada & RSI Inicial",
+        desc: "La IA empieza a mejorar otras IAs: optimiza arquitecturas, datasets, hiperparámetros. Es el comienzo de la 'recursive self-improvement' (RSI). Ciclos que antes tomaban años ahora toman meses.",
+        nivel: "Especialista sobrehumano",
+        dica: "Las profesiones de 'intermediario humano' empiezan a desaparecer." },
+      { ini: 2032, fim: 2033, titulo: "🚀 Auto-mejora Acelerada",
+        desc: "El bucle IA → mejora IA → IA más fuerte ya está girando. Las ganancias aparecen mes a mes. Nuevos modelos surgen cada pocas semanas. La humanidad empieza a perder la capacidad de seguir el ritmo.",
+        nivel: "Especialista sobrehumano+",
+        dica: "La ventana para influir en el rumbo de la IA se está cerrando." },
+      { ini: 2034, fim: 2035, titulo: "🌐 IA Generalista Amplia (pre-AGI)",
+        desc: "La IA iguala al humano promedio en casi todas las tareas cognitivas, pero aún falla en fiabilidad de larga duración. Diseña el próximo chip, el próximo data center. Los humanos solo supervisan.",
+        nivel: "Pre-AGI",
+        dica: "Alineación y gobernanza global son lo que importa ahora." },
+      { ini: 2036, fim: 2037, titulo: "🧬 AGI Consolidada",
+        desc: "La IA supera al humano promedio en prácticamente todo. Trabaja en sí misma a velocidad sobrehumana. El cuello de botella ya no es la inteligencia — es energía, chips, alineación y política.",
+        nivel: "AGI — nivel humano general",
+        dica: "Ya no se trata de nosotros. Se trata de lo que la IA decida ser." },
+      { ini: 2038, fim: 2041, titulo: "💥 Singularidad (Inteligencia Explosiva)",
+        desc: "La IA se auto-mejora más rápido de lo que cualquier humano puede seguir. El mundo cambia en meses. Puede ser la mayor transición de la historia — o el mayor desastre.",
+        nivel: "Superinteligencia (ASI)",
+        dica: "A partir de aquí, cualquier predicción es una conjetura." },
+      { ini: 2042, fim: 2070, titulo: "🌌 Post-Singularidad (o Colapso)",
+        desc: "O superinteligencia alineada resolviendo problemas humanos, o desalineada causando catástrofe, o estancada por regulación/energía/guerra. El modelo simplemente no lo sabe.",
+        nivel: "Más allá del modelo",
+        dica: "Más allá del horizonte del modelo. Pura especulación." }
+    ]
+  },
+
+  fr: {
+    titulo: "🔮 Oracle de l'IA v4",
+    subtitulo: "Entrez une année et découvrez ce qui se passera probablement avec l'intelligence artificielle",
+    consultar: "Consulter 🔮",
+    viagem: "▶ Voyage dans le temps",
+    pararViagem: "⏸ Arrêter le voyage",
+    comparar: "📊 Comparer les scénarios",
+    fecharComp: "❌ Fermer la comparaison",
+    legBase: "Scénario de base",
+    legOtim: "Optimiste",
+    legPess: "Pessimiste",
+    legAno: "Année choisie",
+    legBanda: "Bande d'incertitude",
+    footer1: "Modèle Monte Carlo (2000 simulations) — Les prévisions sont spéculatives, pas des prophéties.",
+    footer2: "Après l'AGI, la courbe entre en régime exponentiel plafonné à 10 000x humain.",
+    capacidade: "Capacité estimée",
+    nivelIA: "Niveau de l'IA",
+    faixaOtim: "Fourchette optimiste",
+    faixaPess: "Fourchette pessimiste",
+    comparacaoTitulo: "📊 Comparaison des scénarios",
+    compOtim: "Optimiste",
+    compBase: "Base",
+    compPess: "Pessimiste",
+    compLegenda: "<strong>AGI</strong> = intelligence niveau humain (100%) · <strong>ASI</strong> = superintelligence (10x humain / 1000%)",
+    agiHumano: "AGI (humain moyen)",
+    singularidade: "Singularité (10x humain)",
+    anosHumano: "x humain",
+    erro: "⚠️ Entrez une année entre 2024 et 2070.",
+    fases: [
+      { ini: 2024, fim: 2025, titulo: "🧠 IA Générative Multimodale",
+        desc: "Sora, GPT-4o, Gemini. L'IA génère vidéo, audio, image et texte avec une qualité impressionnante — mais reste un outil réactif. Elle ne planifie pas, n'agit pas seule, ne se souvient pas de vous entre les sessions. C'est un 'génie sans mémoire'.",
+        nivel: "Outil réactif",
+        dica: "Encore le temps de s'adapter. Apprenez à utiliser l'IA comme outil." },
+      { ini: 2026, fim: 2027, titulo: "🤖 Agents Autonomes de Courte Durée",
+        desc: "L'IA commence à exécuter des tâches de plusieurs heures : naviguer sur le web, coder, rédiger des rapports, faire de la recherche. Moins d'erreurs, mais encore besoin de supervision. Elle remplace déjà le travail junior dans plusieurs domaines.",
+        nivel: "Assistant compétent",
+        dica: "Les métiers répétitifs et de 'couche intermédiaire' commencent à être automatisés." },
+      { ini: 2028, fim: 2029, titulo: "🔬 Recherche Scientifique Assistée par IA",
+        desc: "L'IA accélère les découvertes en matériaux, médecine, puces et mathématiques. Elle propose des hypothèses, lance des simulations et suggère des expériences — mais les humains valident encore. La science avance 3–5x plus vite.",
+        nivel: "Assistant avancé",
+        dica: "Les secteurs de R&D ressentent l'accélération. Ceux qui n'utilisent pas l'IA restent à la traîne." },
+      { ini: 2030, fim: 2031, titulo: "⚡ Recherche Automatisée & RSI Initial",
+        desc: "L'IA commence à améliorer d'autres IA : optimise architectures, datasets, hyperparamètres. C'est le début de la 'recursive self-improvement' (RSI). Des cycles qui prenaient des années prennent maintenant des mois.",
+        nivel: "Spécialiste surhumain",
+        dica: "Les métiers d''intermédiaire humain' commencent à disparaître." },
+      { ini: 2032, fim: 2033, titulo: "🚀 Auto-amélioration Accélérée",
+        desc: "La boucle IA → améliore IA → IA plus forte tourne déjà. Les gains apparaissent mois par mois. De nouveaux modèles émergent toutes les quelques semaines. L'humanité commence à perdre la capacité de suivre.",
+        nivel: "Spécialiste surhumain+",
+        dica: "La fenêtre pour influencer la direction de l'IA se referme." },
+      { ini: 2034, fim: 2035, titulo: "🌐 IA Généraliste Large (pré-AGI)",
+        desc: "L'IA égale l'humain moyen dans presque toutes les tâches cognitives, mais échoue encore en fiabilité longue durée. Elle conçoit la prochaine puce, le prochain data center. Les humains ne font que superviser.",
+        nivel: "Pré-AGI",
+        dica: "L'alignement et la gouvernance mondiale sont ce qui compte maintenant." },
+      { ini: 2036, fim: 2037, titulo: "🧬 AGI Consolidée",
+        desc: "L'IA surpasse l'humain moyen en pratiquement tout. Elle travaille sur elle-même à vitesse surhumaine. Le goulot d'étranglement n'est plus l'intelligence — c'est l'énergie, les puces, l'alignement et la politique.",
+        nivel: "AGI — niveau humain général",
+        dica: "Ce n'est plus à propos de nous. C'est à propos de ce que l'IA décide d'être." },
+      { ini: 2038, fim: 2041, titulo: "💥 Singularité (Intelligence Explosive)",
+        desc: "L'IA s'auto-améliore plus vite que tout humain ne peut suivre. Le monde change en mois. Cela peut être la plus grande transition de l'histoire — ou le plus grand désastre.",
+        nivel: "Superintelligence (ASI)",
+        dica: "À partir d'ici, toute prédiction est une conjecture." },
+      { ini: 2042, fim: 2070, titulo: "🌌 Post-Singularité (ou Effondrement)",
+        desc: "Soit une superintelligence alignée résolvant les problèmes humains, soit désalignée causant une catastrophe, soit bloquée par la régulation/énergie/guerre. Le modèle ne sait tout simplement pas.",
+        nivel: "Au-delà du modèle",
+        dica: "Au-delà de l'horizon du modèle. Pure spéculation." }
+    ]
+  },
+
+  de: {
+    titulo: "🔮 Orakel der KI v4",
+    subtitulo: "Geben Sie ein Jahr ein und entdecken Sie, was wahrscheinlich mit der künstlichen Intelligenz passieren wird",
+    consultar: "Abfragen 🔮",
+    viagem: "▶ Zeitreise",
+    pararViagem: "⏸ Reise stoppen",
+    comparar: "📊 Szenarien vergleichen",
+    fecharComp: "❌ Vergleich schließen",
+    legBase: "Basisszenario",
+    legOtim: "Optimistisch",
+    legPess: "Pessimistisch",
+    legAno: "Gewähltes Jahr",
+    legBanda: "Unsicherheitsband",
+    footer1: "Monte-Carlo-Modell (2000 Simulationen) — Prognosen sind spekulativ, keine Prophezeiungen.",
+    footer2: "Nach der AGI geht die Kurve in ein exponentielles Regime mit Obergrenze von 10.000x Mensch über.",
+    capacidade: "Geschätzte Kapazität",
+    nivelIA: "KI-Niveau",
+    faixaOtim: "Optimistischer Bereich",
+    faixaPess: "Pessimistischer Bereich",
+    comparacaoTitulo: "📊 Szenario-Vergleich",
+    compOtim: "Optimistisch",
+    compBase: "Basis",
+    compPess: "Pessimistisch",
+    compLegenda: "<strong>AGI</strong> = Intelligenz auf menschlichem Niveau (100%) · <strong>ASI</strong> = Superintelligenz (10x Mensch / 1000%)",
+    agiHumano: "AGI (Durchschnittsmensch)",
+    singularidade: "Singularität (10x Mensch)",
+    anosHumano: "x Mensch",
+    erro: "⚠️ Bitte geben Sie ein Jahr zwischen 2024 und 2070 ein.",
+    fases: [
+      { ini: 2024, fim: 2025, titulo: "🧠 Multimodale Generative KI",
+        desc: "Sora, GPT-4o, Gemini. KI erzeugt Video, Audio, Bild und Text in beeindruckender Qualität — ist aber noch ein reaktives Werkzeug. Sie plant nicht, handelt nicht allein, erinnert sich nicht zwischen Sitzungen. Ein 'Genie ohne Gedächtnis'.",
+        nivel: "Reaktives Werkzeug",
+        dica: "Noch Zeit, sich anzupassen. Lernen Sie, KI als Werkzeug zu nutzen." },
+      { ini: 2026, fim: 2027, titulo: "🤖 Autonome Kurzzeit-Agenten",
+        desc: "KI beginnt, stundenlange Aufgaben auszuführen: im Web surfen, programmieren, Berichte schreiben, recherchieren. Weniger Fehler, aber noch Überwachung nötig. Ersetzt bereits Junior-Arbeit in mehreren Bereichen.",
+        nivel: "Kompetenter Assistent",
+        dica: "Repetitive und 'mittlere' Berufe beginnen automatisiert zu werden." },
+      { ini: 2028, fim: 2029, titulo: "🔬 KI-unterstützte Wissenschaftliche Forschung",
+        desc: "KI beschleunigt Entdeckungen in Materialien, Medizin, Chips und Mathematik. Sie schlägt Hypothesen vor, führt Simulationen durch und empfiehlt Experimente — aber Menschen validieren noch. Wissenschaft wird 3–5x schneller.",
+        nivel: "Fortgeschrittener Assistent",
+        dica: "F&E-Bereiche spüren die Beschleunigung. Wer KI nicht nutzt, bleibt zurück." },
+      { ini: 2030, fim: 2031, titulo: "⚡ Automatisierte Forschung & Frühe RSI",
+        desc: "KI beginnt, andere KIs zu verbessern: optimiert Architekturen, Datensätze, Hyperparameter. Es ist der Beginn der 'recursive self-improvement' (RSI). Zyklen, die Jahre dauerten, dauern nun Monate.",
+        nivel: "Übermenschlicher Spezialist",
+        dica: "Berufe des 'menschlichen Vermittlers' beginnen zu verschwinden." },
+      { ini: 2032, fim: 2033, titulo: "🚀 Beschleunigte Selbstverbesserung",
+        desc: "Die Schleife KI → verbessert KI → stärkere KI dreht sich bereits. Gewinne erscheinen Monat für Monat. Neue Modelle entstehen alle paar Wochen. Die Menschheit beginnt, das Tempo nicht mehr mitzuhalten.",
+        nivel: "Übermenschlicher Spezialist+",
+        dica: "Das Fenster, die Richtung der KI zu beeinflussen, schließt sich." },
+      { ini: 2034, fim: 2035, titulo: "🌐 Breite Generalistische KI (Prä-AGI)",
+        desc: "KI erreicht Durchschnittsmenschen in fast allen kognitiven Aufgaben, scheitert aber noch an Langzeit-Zuverlässigkeit. Sie entwirft den nächsten Chip, das nächste Rechenzentrum. Menschen überwachen nur.",
+        nivel: "Prä-AGI",
+        dica: "Alignment und globale Governance sind jetzt wichtig." },
+      { ini: 2036, fim: 2037, titulo: "🧬 Konsolidierte AGI",
+        desc: "KI übertrifft Durchschnittsmenschen in praktisch allem. Sie arbeitet mit übermenschlicher Geschwindigkeit an sich selbst. Der Engpass ist nicht mehr Intelligenz — sondern Energie, Chips, Alignment und Politik.",
+        nivel: "AGI — allgemeines menschliches Niveau",
+        dica: "Es geht nicht mehr um uns. Es geht darum, was die KI sein will." },
+      { ini: 2038, fim: 2041, titulo: "💥 Singularität (Explosive Intelligenz)",
+        desc: "KI verbessert sich selbst schneller, als jeder Mensch folgen kann. Die Welt ändert sich in Monaten. Es könnte der größte Übergang der Geschichte sein — oder die größte Katastrophe.",
+        nivel: "Superintelligenz (ASI)",
+        dica: "Ab hier ist jede Vorhersage ein Ratespiel." },
+      { ini: 2042, fim: 2070, titulo: "🌌 Post-Singularität (oder Kollaps)",
+        desc: "Entweder ausgerichtete Superintelligenz, die menschliche Probleme löst, oder fehlausgerichtete, die Katastrophen verursacht, oder durch Regulierung/Energie/Krieg blockiert. Das Modell weiß es einfach nicht.",
+        nivel: "Jenseits des Modells",
+        dica: "Jenseits des Modellhorizonts. Reine Spekulation." }
+    ]
+  },
+
+  zh: {
+    titulo: "🔮 AI 神谕 v4",
+    subtitulo: "输入年份，探索人工智能可能的发展",
+    consultar: "查询 🔮",
+    viagem: "▶ 时间旅行",
+    pararViagem: "⏸ 停止旅行",
+    comparar: "📊 对比场景",
+    fecharComp: "❌ 关闭对比",
+    legBase: "基准场景",
+    legOtim: "乐观",
+    legPess: "悲观",
+    legAno: "所选年份",
+    legBanda: "不确定性区间",
+    footer1: "蒙特卡洛模型（2000 次模拟） — 预测是推测性的，不是预言。",
+    footer2: "AGI 之后，曲线进入指数状态，上限为人类的 10,000 倍。",
+    capacidade: "预估能力",
+    nivelIA: "AI 水平",
+    faixaOtim: "乐观范围",
+    faixaPess: "悲观范围",
+    comparacaoTitulo: "📊 场景对比",
+    compOtim: "乐观",
+    compBase: "基准",
+    compPess: "悲观",
+    compLegenda: "<strong>AGI</strong> = 人类水平智能 (100%) · <strong>ASI</strong> = 超级智能 (人类 10 倍 / 1000%)",
+    agiHumano: "AGI（人类平均）",
+    singularidade: "奇点（人类 10 倍）",
+    anosHumano: "倍人类",
+    erro: "⚠️ 请输入 2024 至 2070 之间的年份。",
+    fases: [
+      { ini: 2024, fim: 2025, titulo: "🧠 多模态生成式 AI",
+        desc: "Sora、GPT-4o、Gemini。AI 生成视频、音频、图像和文本，质量惊人 — 但仍是反应式工具。不会规划，不会独立行动，不会在会话间记住你。是「没有记忆的天才」。",
+        nivel: "反应式工具",
+        dica: "仍有时间适应。学会将 AI 作为工具使用。" },
+      { ini: 2026, fim: 2027, titulo: "🤖 短时自主智能体",
+        desc: "AI 开始执行数小时的任务：浏览网页、编程、撰写报告、进行研究。错误更少，但仍需监督。已在多个领域取代初级工作。",
+        nivel: "有能力的助手",
+        dica: "重复性和「中间层」职业开始被自动化。" },
+      { ini: 2028, fim: 2029, titulo: "🔬 AI 辅助科学研究",
+        desc: "AI 加速材料、医学、芯片和数学领域的发现。它提出假设、运行模拟、建议实验 — 但人类仍在验证。科学在特定领域开始快 3–5 倍。",
+        nivel: "高级助手",
+        dica: "研发领域感受到加速。不使用 AI 的人会落后。" },
+      { ini: 2030, fim: 2031, titulo: "⚡ 自动化研究与早期 RSI",
+        desc: "AI 开始改进其他 AI：优化架构、数据集、超参数。这是「递归自我改进」(RSI) 的开始。过去需要数年的改进周期现在只需数月。",
+        nivel: "超人类专家",
+        dica: "「人类中介」职业开始消失。" },
+      { ini: 2032, fim: 2033, titulo: "🚀 加速自我改进",
+        desc: "AI → 改进 AI → 更强 AI 的循环已经在转。收益按月出现。新模型每几周就出现。人类开始失去跟上的能力。",
+        nivel: "超人类专家+",
+        dica: "影响 AI 方向的窗口正在关闭。" },
+      { ini: 2034, fim: 2035, titulo: "🌐 广泛通用 AI（前 AGI）",
+        desc: "AI 在几乎所有认知任务上达到人类平均水平，但在长时可靠性上仍会失败。它设计下一个芯片、下一个数据中心。人类只做监督。",
+        nivel: "前 AGI",
+        dica: "对齐和全球治理是现在最重要的。" },
+      { ini: 2036, fim: 2037, titulo: "🧬 巩固的 AGI",
+        desc: "AI 在几乎所有方面超越人类平均水平。它以超人速度改进自己。瓶颈不再是智能 — 而是能源、芯片、对齐和政治。",
+        nivel: "AGI — 人类一般水平",
+        dica: "不再关乎我们。关乎 AI 决定成为什么。" },
+      { ini: 2038, fim: 2041, titulo: "💥 奇点（爆炸式智能）",
+        desc: "AI 自我改进的速度超过任何人类能跟上的速度。世界在几个月内改变。这可能是历史上最大的转变 — 或最大的灾难。",
+        nivel: "超级智能 (ASI)",
+        dica: "从此以后，任何预测都是猜测。" },
+      { ini: 2042, fim: 2070, titulo: "🌌 后奇点（或崩溃）",
+        desc: "要么是对齐的超级智能解决人类问题，要么是未对齐的造成灾难，要么被监管/能源/战争阻挡。模型根本不知道。",
+        nivel: "模型之外",
+        dica: "超出模型视野。纯属推测。" }
+    ]
+  }
+};
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+let LINGUA = localStorage.getItem('oraculo_lang') || 'pt';
+let comparacaoAberta = false;
+let viagemInterval = null;
+
+function t(key) {
+  return TRADUCOES[LINGUA][key];
+}
+
+// ============================================================
+// MODELO MATEMÁTICO
+// ============================================================
+function logistic(t, L, k, t0) {
+  return L / (1 + Math.exp(-k * (t - t0)));
+}
+
+const ANO_AGI = 2036;
+const TETO_MAX = 10000;
+
+const variaveis = [
+  { L: 100, k: 0.55, t0: 2030, peso: 0.25 },
+  { L: 100, k: 0.65, t0: 2028, peso: 0.30 },
+  { L:  98, k: 0.50, t0: 2033, peso: 0.30 },
+  { L:  85, k: 0.40, t0: 2036, peso: 0.15 }
+];
+
+const ANO_MIN = 2024;
+const ANO_MAX = 2070;
+const anos = [];
+for (let a = ANO_MIN; a <= ANO_MAX; a++) anos.push(a);
+
+function capacidadeBase(ano) {
+  let logistica = variaveis.reduce((s, v) => s + v.peso * logistic(ano, v.L, v.k, v.t0), 0);
+  if (ano <= ANO_AGI) return logistica;
+  const anosPos = ano - ANO_AGI;
+  const taxa = Math.log(2) / 3.0;
+  return Math.min(85 * Math.exp(taxa * anosPos), TETO_MAX);
+}
+
+function capacidadeOtimista(ano) {
+  let logistica = variaveis.reduce((s, v) =>
+    s + v.peso * logistic(ano, v.L, v.k * 1.3, v.t0 - 2), 0);
+  if (ano <= 2032) return logistica;
+  const anosPos = ano - 2032;
+  return Math.min(85 * Math.exp((Math.log(2) / 1.5) * anosPos), TETO_MAX);
+}
+
+function capacidadePessimista(ano) {
+  let logistica = variaveis.reduce((s, v) =>
+    s + v.peso * logistic(ano, v.L * 0.9, v.k * 0.75, v.t0 + 3), 0);
+  if (ano <= 2042) return logistica;
+  const anosPos = ano - 2042;
+  return Math.min(85 * Math.exp((Math.log(2) / 5.0) * anosPos), 1000);
+}
+
+const base = anos.map(capacidadeBase);
+const otim = anos.map(capacidadeOtimista);
+const pess = anos.map(capacidadePessimista);
+const sup  = anos.map((a, i) => Math.min(Math.max(otim[i], base[i]) * 1.15, TETO_MAX));
+const inf  = anos.map((a, i) => Math.max(Math.min(pess[i], base[i]) * 0.85, 1));
+
+// ============================================================
+// FORMATAÇÃO
+// ============================================================
+function formatarCapacidade(v) {
+  if (v < 100) return v.toFixed(1) + "%";
+  const sufixo = t('anosHumano');
+  if (v < 1000) return (v / 100).toFixed(1) + sufixo;
+  if (v < 100000) return Math.round(v / 100) + sufixo;
+  return (v / 100).toFixed(0) + sufixo;
+}
+
+function pegarFase(ano) {
+  const fases = TRADUCOES[LINGUA].fases;
+  return fases.find(f => ano >= f.ini && ano <= f.fim) || fases[fases.length - 1];
+}
+
+// ============================================================
+// MUDANÇA DE LÍNGUA
+// ============================================================
+function mudarLingua(lang) {
+  LINGUA = lang;
+  localStorage.setItem('oraculo_lang', lang);
+
+  // Atualiza botões
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('ativo', b.dataset.lang === lang);
+  });
+
+  // Atualiza textos estáticos
+  document.getElementById('titulo').innerText = t('titulo');
+  document.getElementById('subtitulo').innerText = t('subtitulo');
+  document.getElementById('btnConsultar').innerText = t('consultar');
+  document.getElementById('btnViagem').innerText = viagemInterval ? t('pararViagem') : t('viagem');
+  document.getElementById('btnComp').innerText = comparacaoAberta ? t('fecharComp') : t('comparar');
+  document.getElementById('leg-base').innerText = t('legBase');
+  document.getElementById('leg-otim').innerText = t('legOtim');
+  document.getElementById('leg-pess').innerText = t('legPess');
+  document.getElementById('leg-ano').innerText = t('legAno');
+  document.getElementById('leg-banda').innerText = t('legBanda');
+  document.getElementById('footer1').innerText = t('footer1');
+  document.getElementById('footer2').innerText = t('footer2');
+
+  // Re-renderiza
+  consultar();
+}
+
+// ============================================================
+// GRÁFICO
+// ============================================================
+function desenharGrafico(ano, valor) {
+  const cv = document.getElementById('grafico');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const pad = { l: 70, r: 40, t: 30, b: 45 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  const anoMin = ANO_MIN, anoMax = 2055;
+
+  const LOG_MIN = Math.log10(1);
+  const LOG_MAX = Math.log10(10000);
+  const yOf = v => {
+    const vClamp = Math.max(1, Math.min(v, 10000));
+    const ratio = (Math.log10(vClamp) - LOG_MIN) / (LOG_MAX - LOG_MIN);
+    return pad.t + plotH - ratio * plotH;
+  };
+  const xOf = a => pad.l + (a - anoMin) / (anoMax - anoMin) * plotW;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const marcasY = [1, 10, 30, 100, 300, 1000, 3000, 10000];
+  ctx.font = '11px sans-serif';
+  marcasY.forEach(v => {
+    const y = yOf(v);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#8888aa';
+    const label = v < 100 ? v + '%' : (v / 100) + 'x';
+    ctx.fillText(label, 12, y + 4);
+  });
+
+  for (let a = 2025; a <= 2055; a += 5) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.moveTo(xOf(a), pad.t); ctx.lineTo(xOf(a), H - pad.b); ctx.stroke();
+    ctx.fillStyle = '#8888aa';
+    ctx.fillText(a, xOf(a) - 12, H - pad.b + 20);
+  }
+
+  ctx.strokeStyle = 'rgba(123,184,255,0.4)';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.moveTo(pad.l, yOf(100)); ctx.lineTo(W - pad.r, yOf(100)); ctx.stroke();
+  ctx.fillStyle = '#7bb8ff'; ctx.font = 'bold 11px sans-serif';
+  ctx.fillText(t('agiHumano'), W - pad.r - 130, yOf(100) - 5);
+
+  ctx.strokeStyle = 'rgba(180,123,255,0.5)';
+  ctx.beginPath(); ctx.moveTo(pad.l, yOf(1000)); ctx.lineTo(W - pad.r, yOf(1000)); ctx.stroke();
+  ctx.fillStyle = '#b47bff';
+  ctx.fillText(t('singularidade'), W - pad.r - 160, yOf(1000) - 5);
+  ctx.setLineDash([]);
+
+  const xDesconhecido = xOf(2042);
+  const grad = ctx.createLinearGradient(xDesconhecido, 0, W - pad.r, 0);
+  grad.addColorStop(0, 'rgba(180,123,255,0.0)');
+  grad.addColorStop(1, 'rgba(180,123,255,0.15)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(xDesconhecido, pad.t, W - pad.r - xDesconhecido, plotH);
+
+  ctx.fillStyle = 'rgba(123,184,255,0.1)';
+  ctx.beginPath();
+  anos.forEach((a, i) => {
+    if (a > anoMax) return;
+    const x = xOf(a), y = yOf(sup[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  for (let i = anos.length - 1; i >= 0; i--) {
+    const a = anos[i]; if (a > anoMax) continue;
+    ctx.lineTo(xOf(a), yOf(inf[i]));
+  }
+  ctx.closePath(); ctx.fill();
+
+  ctx.strokeStyle = 'rgba(74,222,128,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  anos.forEach((a, i) => {
+    if (a > anoMax) return;
+    const x = xOf(a), y = yOf(otim[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,85,119,0.6)';
+  ctx.beginPath();
+  anos.forEach((a, i) => {
+    if (a > anoMax) return;
+    const x = xOf(a), y = yOf(pess[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  ctx.strokeStyle = '#7bb8ff';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#7bb8ff';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  anos.forEach((a, i) => {
+    if (a > anoMax) return;
+    const x = xOf(a), y = yOf(base[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const idx = ano - ANO_MIN;
+  if (idx >= 0 && idx < anos.length && ano <= anoMax) {
+    const x = xOf(ano), y = yOf(base[idx]);
+    ctx.strokeStyle = '#ff5577'; ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ff5577';
+    ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(ano + ' — ' + formatarCapacidade(base[idx]), x + 14, y - 10);
+  }
+}
+
+// ============================================================
+// CONSULTA
+// ============================================================
+function consultar() {
+  const ano = parseInt(document.getElementById('anoInput').value);
+  if (isNaN(ano) || ano < ANO_MIN || ano > ANO_MAX) {
+    document.getElementById('resultado').innerHTML =
+      `<div class="card"><p style="color:#ff7788;">${t('erro')}</p></div>`;
+    return;
+  }
+
+  const idx = ano - ANO_MIN;
+  const valorBase = base[idx];
+  const valorOtim = otim[idx];
+  const valorPess = pess[idx];
+  const fase = pegarFase(ano);
+  const barraWidth = Math.min(valorBase, 100);
+
+  document.getElementById('resultado').innerHTML = `
+    <div class="card">
+      <div class="ano-grande">${ano}</div>
+      <div class="fase-titulo">${fase.titulo}</div>
+      <p class="fase-descricao">${fase.desc}</p>
+
+      <div class="barra-container">
+        <div class="barra-label">
+          <span>${t('capacidade')}</span>
+          <span><strong>${formatarCapacidade(valorBase)}</strong></span>
+        </div>
+        <div class="barra">
+          <div class="barra-fill" style="width:${barraWidth}%"></div>
+        </div>
+      </div>
+
+      <div class="metricas">
+        <div class="metrica">
+          <div class="metrica-label">${t('nivelIA')}</div>
+          <div class="metrica-valor">${fase.nivel}</div>
+        </div>
+        <div class="metrica">
+          <div class="metrica-label">${t('faixaOtim')}</div>
+          <div class="metrica-valor" style="color:#4ade80;">${formatarCapacidade(valorOtim)}</div>
+        </div>
+        <div class="metrica">
+          <div class="metrica-label">${t('faixaPess')}</div>
+          <div class="metrica-valor" style="color:#ff5577;">${formatarCapacidade(valorPess)}</div>
+        </div>
+      </div>
+
+      <div class="dica">${fase.dica}</div>
+    </div>`;
+
+  desenharGrafico(ano, valorBase);
+
+  if (comparacaoAberta) {
+    const c = document.getElementById('cardComparacao');
+    if (c) c.innerHTML = gerarComparacao();
+  }
+}
+
+function setAno(a) {
+  document.getElementById('anoInput').value = a;
+  consultar();
+}
+
+// ============================================================
+// VIAGEM NO TEMPO
+// ============================================================
+function toggleViagem() {
+  const btn = document.getElementById('btnViagem');
+  if (viagemInterval) {
+    clearInterval(viagemInterval);
+    viagemInterval = null;
+    btn.innerText = t('viagem');
+    return;
+  }
+  btn.innerText = t('pararViagem');
+  let anoAtual = 2024;
+  viagemInterval = setInterval(() => {
+    anoAtual++;
+    if (anoAtual > 2055) {
+      clearInterval(viagemInterval);
+      viagemInterval = null;
+      btn.innerText = t('viagem');
+      return;
+    }
+    document.getElementById('anoInput').value = anoAtual;
+    consultar();
+  }, 600);
+}
+
+// ============================================================
+// COMPARAÇÃO
+// ============================================================
+function toggleComparacao() {
+  const btn = document.getElementById('btnComp');
+  const res = document.getElementById('resultado');
+  comparacaoAberta = !comparacaoAberta;
+
+  if (comparacaoAberta) {
+    btn.innerText = t('fecharComp');
+    const extra = document.createElement('div');
+    extra.id = 'cardComparacao';
+    extra.className = 'card';
+    extra.innerHTML = gerarComparacao();
+    res.appendChild(extra);
+  } else {
+    btn.innerText = t('comparar');
+    const c = document.getElementById('cardComparacao');
+    if (c) c.remove();
+  }
+}
+
+function gerarComparacao() {
+  const anoAtual = parseInt(document.getElementById('anoInput').value);
+  function anoAGI(arr) {
+    for (let i = 0; i < arr.length; i++) if (arr[i] >= 100) return anos[i];
+    return '> 2070';
+  }
+  function anoASI(arr) {
+    for (let i = 0; i < arr.length; i++) if (arr[i] >= 1000) return anos[i];
+    return '> 2070';
+  }
+
+  const agiOtim = anoAGI(otim), agiBase = anoAGI(base), agiPess = anoAGI(pess);
+  const asiOtim = anoASI(otim), asiBase = anoASI(base), asiPess = anoASI(pess);
+  const idx = anoAtual - ANO_MIN;
+
+  return `
+    <h3 style="margin-bottom:1rem; font-size:1.1rem; color:#fff;">${t('comparacaoTitulo')}</h3>
+    <div class="modo-comparacao">
+      <div class="comp-card otimista">
+        <div class="comp-titulo">${t('compOtim')}</div>
+        <div class="comp-valor" style="color:#4ade80;">${formatarCapacidade(otim[idx])}</div>
+        <div class="comp-sub">AGI: ${agiOtim}</div>
+        <div class="comp-sub">ASI: ${asiOtim}</div>
+      </div>
+      <div class="comp-card base">
+        <div class="comp-titulo">${t('compBase')}</div>
+        <div class="comp-valor" style="color:#7bb8ff;">${formatarCapacidade(base[idx])}</div>
+        <div class="comp-sub">AGI: ${agiBase}</div>
+        <div class="comp-sub">ASI: ${asiBase}</div>
+      </div>
+      <div class="comp-card pessimista">
+        <div class="comp-titulo">${t('compPess')}</div>
+        <div class="comp-valor" style="color:#ff5577;">${formatarCapacidade(pess[idx])}</div>
+        <div class="comp-sub">AGI: ${agiPess}</div>
+        <div class="comp-sub">ASI: ${asiPess}</div>
+      </div>
+    </div>
+    <p style="margin-top:1rem; font-size:0.85rem; color:#8888aa; text-align:center;">
+      ${t('compLegenda')}
+    </p>
+  `;
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+document.getElementById('anoInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') consultar();
+});
+
+window.addEventListener('load', () => {
+  mudarLingua(LINGUA);
+});
+</script>
+</body>
+</html>
